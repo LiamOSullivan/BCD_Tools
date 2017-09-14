@@ -32,8 +32,9 @@ import java.io.File;
 import org.apache.commons.io.FilenameUtils; //added to code folder
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.text.DateFormat;
 import java.util.Locale;
-
+import java.text.ParseException;
 String emptyPath = "//data//empty//";
 String addPath = "//data//ambientSound14//";
 String fullPath = "C://Users//Liam//Google Drive//NCG//Tasks//System Architecture//Code//DashboardPartialCopy//public_html//ambientSound1";
@@ -53,7 +54,13 @@ void setup() {
       Path p = Paths.get(directoryFiles[i].toString());
       String filename = p.getFileName().toString();
       println("filename: "+filename);
-      verifyFilenameTimestamp(filename);  //check filename timestamp against dates
+      //check filename timestamp against dates
+      if (verifyFilenameTimestamp(filename)) {
+        println("Filename timestamp matches dates in JSON data");
+      } else {
+        println("Filename timestamp does not match dates in JSON data, exiting");
+        exit();
+      }
     }
     println("Finished file parsing.");
   } else {
@@ -139,7 +146,7 @@ boolean verifyFilenameTimestamp(String f_) {
   println("\t# characters: "+base.length());
   String epochString = null;
 
-  //TODO: make this more robust e.g. for all possible site-ids dates combos
+  //TODO: make this more robust e.g. for all possible site-ids, dates combos
   if (base.length()==15) {
     epochString = base.substring(5, 15); //will assume e.g. site#**********
   } else if (base.length()==16) {
@@ -153,16 +160,32 @@ boolean verifyFilenameTimestamp(String f_) {
   long epochLong = Long.parseLong(epochString);
   Date date = new Date(epochLong * 1000L);
   SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
-  println("\tHuman readable: "+format.format(date));
-  String firstDate = dates.getString(0);
-  String lastDate = dates.getString(dates.size()-1);
-  print("First date in JSON data: "+firstDate);
-  println("\tlast date in JSON data: "+lastDate);
-  if (firstDate.equals(lastDate) && lastDate.equals(format)) {  
-    return true;
-  } else {
-    return false;
+  String dateString = format.format(date);
+  println("\tHuman readable: "+dateString);
+  
+  String startDateString = dates.getString(0);
+  String endDateString = dates.getString(dates.size()-1);
+  println("Start date string in JSON data: "+startDateString);
+  println("End date string in JSON data: "+endDateString);
+  Date startDate, endDate;
+  String newDateString;
+  try {
+    startDate = format.parse(startDateString);
+    endDate = format.parse(endDateString);
+    newDateString = format.format(startDate);
+    endDateString = format.format(endDate);
+    println("\t Start/end dates in JSON data: "+newDateString+" | "+endDateString);
+    if (newDateString.equals(endDateString)&&newDateString.equals(dateString)) {
+      return true;
+    } else {
+      return false;
+    }
+  } 
+  catch (ParseException e) {
+    //e.printStackTrace();
+    println("Error parsing date string from JSON data, and JSON data spans one day");
   }
+  return false;
 }
 
 
