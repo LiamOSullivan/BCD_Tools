@@ -8,7 +8,11 @@ import de.bezier.data.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.text.DateFormat;
+import java.net.SocketException;
+import java.sql.Timestamp;
 MySQL db;
+
+//boolean FORCE_APPEND = true; //starts inserting after current highest index found in DB
 
 void setup()
 {
@@ -25,55 +29,15 @@ void setup()
 
   // connect to database of server "localhost"
   db = new MySQL( this, "localhost", database, user, pass );
-
   if ( db.connect() )
   {
     println( "Successful Connection to DB!" );
-
-    //query tables
-    String[] tableNames = db.getTableNames();
-    String [] cols = {"null"};
-    for (int i=0; i<tableNames.length; i+=1) {
-      println( "Table #"+i+" is named " + tableNames[i] );
-
-      //  //query rows
-      db.query( "SELECT COUNT(*) FROM %s", tableNames[i] );
-      db.next(); //Check if more results (rows) are available. This needs to be called before any results can be retrieved.
-      println( "This table has " + db.getInt(1) + " rows" ); //first (second?) int contains # rows?
-
-      //  //query columns
-      db.query( "SELECT * FROM %s", tableNames[i] );
-      cols = db.getColumnNames(); //Returns an array with the column names of the last request.
-      for (int p=0; p<cols.length; p+=1) {
-        println("Column name:"+cols[p]);
-        while (db.next())
-        {
-          int n = db.getInt(cols[p]);  //search for column name (not case sensitive)
-          String s = db.getString(cols[p]);
-          println("int: "+n+"\tString: "+s);
-        }
-        println("--------");
-      }
-    }
-
-    //SomeObject newData = new SomeObject (int(random(100)));
-    db.query( "SELECT * FROM %s", tableNames[0] );
-    println("SELECT * FROM "+tableNames[0]);
-    cols = db.getColumnNames();
-    print("Columns in table: " );
-    print(cols);
-    println();
-    db.query( "SELECT * FROM %s", tableNames[0] );
+    printDBInfo(db);
     long start = millis();
-    for (int i=0; i<10; i+=1) {
-      //SomeObject newData = new SomeObject(int(random(100)));
-      SoundReading newData = new SoundReading(i);
-      newData.setReadId(i);
-      db.saveToDatabase(tableNames[0], newData); //update values in database.
-      db.query( "SELECT * FROM %s", tableNames[0] ); //required to reopen results set
-    }
-    //long delta = millis()-start;
-    //println("Elapsed time for database update "+delta);
+    insertFilesIntoTable(db, "sound_monitoring_readings", true);
+    long delta = millis()-start;
+    println("Elapsed time for database update "+delta);
+
     ////Alternatives... getting quirky results
     ////insert rows
     ////db.insertUpdateInDatabase(java.lang.String tableName, java.lang.String[] columnNames, java.lang.Object[] values) 
@@ -92,23 +56,56 @@ void setup()
   exit();
 }
 
-
-class SomeObject {
-  public int id;
-  public int randomNumber1;
-  public int randomNumber2;
-
-  SomeObject(int n_) {
-
-    this.randomNumber1 = n_;
-    this.randomNumber2 = 2*n_;
+void insertFilesIntoTable(MySQL db_, String tn_, boolean append_) {
+  //query rows
+  db_.query( "SELECT COUNT(*) FROM %s", tn_ );
+  db_.next(); //Check if more results (rows) are available. This needs to be called before any results can be retrieved.
+  int nRows = db_.getInt(1);
+  println( "The table has " + nRows + " rows" ); //first (second?) int contains # rows?
+  int offset = 0;
+  if (append_) {
+    offset = nRows;
   }
-
-  public void setId ( int id_ ) {
-    this.id = id_;
+  for (int i=0; i<10; i+=1) {
+    //SomeObject newData = new SomeObject(int(random(100)));
+    SoundReading newData = new SoundReading(i);
+    newData.setReadId(i+offset);
+    db.saveToDatabase(tn_, newData); //update values in database.
+    db.query( "SELECT * FROM %s", tn_); //required to reopen results set
   }
+}
 
-  public int getId () {
-    return this.id;
+
+void printDBInfo(MySQL db_) {
+  //query tables
+
+  String[] tableNames = db_.getTableNames();
+  String [] cols = {"null"};
+
+
+  for (int i=0; i<tableNames.length; i+=1) {
+    println( "-------------------");
+    println( "Table #"+i+" is named " + tableNames[i] );
+
+    //query rows
+    db_.query( "SELECT COUNT(*) FROM %s", tableNames[i] );
+    db_.next(); //Check if more results (rows) are available. This needs to be called before any results can be retrieved.
+    println( "This table has " + db_.getInt(1) + " rows" ); //first (second?) int contains # rows?
+
+    //query columns
+    db_.query( "SELECT * FROM %s", tableNames[i] );
+    String [] colNames = db_.getColumnNames(); //Returns an array with the column names of the last request.
+    print("Column names: ");
+    print(colNames);
+    println();
+    //for (int p=0; p<cols.length; p+=1) {
+    //  println("Column name:"+cols[p]);
+    //  //while (db.next())
+    //  //{
+    //  //  int n = db.getInt(cols[p]);  //search for column name (not case sensitive)
+    //  //  String s = db.getString(cols[p]);
+    //  //  println("int: "+n+"\tString: "+s);
+    //  //}
+    //}
   }
 }
