@@ -20,7 +20,7 @@
  ***************************/
 
 /*
- ***TODO: ignore files of szie 0KB with no entries and/or JSON markup
+ ***TODO: ignore files of size 0KB with no entries and/or JSON markup
  
  */
 
@@ -33,180 +33,94 @@ import org.apache.commons.io.FilenameUtils; //added to code folder
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.text.DateFormat;
+import java.time.LocalTime;
+import java.time.LocalDate;
 import java.util.Locale;
 import java.text.ParseException;
+import de.bezier.data.sql.*;
+import java.sql.Timestamp;
 
+MySQL db;
 boolean debugPrintDebug = true; //toggle debug print messages to console
 
+//JSON files
 String emptyPath = "//data//empty//";
 String addPath = "//data//ambientSound14//";
 String fullPath = "C://Users//Liam//Google Drive//NCG//Tasks//System Architecture//Code//DashboardPartialCopy//public_html//ambientSound1";
 String searchPath; 
-
 JSONObject json;
 JSONArray dates, times, levels; //Keys for Environmental Sound Monitoring 
+
+//Database access
+String user     = "root";
+String pass     = "qlDh6KXnANo938ju";
+//String database = "test_mysql";
+String database = "soundmonitoringdb";
 
 void setup() {
   searchPath = sketchPath()+addPath;
   //searchPath = emptyPath;
   File[] directoryFiles = loadFileList(searchPath); //***TODO: only load .php or .json
-  if (directoryFiles.length > 1) {
+  if (directoryFiles.length > 1) { //***TODO: hardcoded must be replaced
     debugPrintln("Start file parsing... could be a while!");
     for (int i=0; i<directoryFiles.length; i+=1) {
-      loadJSONData(directoryFiles[i]);
+      debugPrintln(".....................................");
+      loadJSONData(directoryFiles[i]); //loads arrays with data from JSON fields in file e.g. dates, times, levels
+
+      //for each file in dir, get a String for the date contained in filename
       Path p = Paths.get(directoryFiles[i].toString());
       String filename = p.getFileName().toString();
       debugPrintln("filename: "+filename);
-      //check filename timestamp against dates
-      if (verifyFilenameTimestamp(filename)) {
+      long epoch = getFilenameTimestamp(filename); //get the long int for the timestamp
+      SimpleDateFormat f = new SimpleDateFormat("dd/MM/yyyy");
+      String dateString = getDateStringFromTimestamp(epoch, f); //format as date string
+
+      //check filename timestamp string against dates in JSON
+      if (verifyJSONDates(dates, dateString)) {
         debugPrintln("Filename timestamp matches dates in JSON data");
       } else {
         debugPrintln("Filename timestamp does not match dates in JSON data, exiting");
+        debugPrintln("******Exit at file: "+filename+"******");
         exit();
       }
     }
+    debugPrintln(".....................................");
     debugPrintln("Finished file parsing.");
   } else {
+    debugPrintln(".....................................");
     debugPrintln("No files to parse in directory");
   }
-  //***TODO: write to SQL DB
 
+  // connect to database of server "localhost"
+  //db = new MySQL( this, "localhost", database, user, pass );
+  //if ( db.connect() )
+  //{
+  //  println( "Successful Connection to DB!" );
+  //  printDBInfo(db);
+  //  long start = millis();
+  //  insertFilesIntoTable(db, "sound_monitoring_readings", true);
+  //  long delta = millis()-start;
+  //  println("Elapsed time for database update "+delta);
+
+  //  ////Alternatives... getting quirky results
+  //  ////insert rows
+  //  ////db.insertUpdateInDatabase(java.lang.String tableName, java.lang.String[] columnNames, java.lang.Object[] values) 
+  //  ////  Insert or update a bunch of values in the database.
+  //  ////while (db.next())
+  //  ////{
+  //  ////  mySQLTable t = new mySQLTable();
+  //  ////  db.setFromRow( t ); //tries to map column names to public fields or setter methods in the given object.
+  //  ////  println( t );
+  //  ////}
+  //} else
+  //{
+  //  println( "Connection to DB failed" );
+  //}
+  //db.close();
   exit();
 }
 
-
-//loadFileList method
-//load all .php files from a directory
-//extract site id from file name
-//extract timestamp from filename
-File[] loadFileList(String sp_) {
-  debugPrintln("Looking in "+searchPath);
-  File dir = new File(sp_);
-  File[] dirList = dir.listFiles();
-  if (dirList != null) {
-    debugPrintln("dirList length is: "+ dirList.length);
-
-    return dirList;
-  } else {
-    dirList = new File[1];
-    //dirList[0] = new File("Directory_File_List_Null"); //***TODO: Test this.
-    return dirList;
-  }
-}
-
-void loadJSONData(File f_) {
-  // Load JSON file
-  //***TODO: check for empty file, Null values.
-  //***TODO: validate timestamp against dates, times
-  debugPrintln("Load JSON from: "+f_);
-  json = loadJSONObject(f_);
-  //debugPrintln(json); 
-
-  //************************
-  //Environmental Sound Data
-  //************************
-  //Get 'entries' key
-  int entries = -1;
-  if (!json.isNull("entries")) {
-    entries = json.getInt("entries");
-    debugPrintln("Entries: "+entries);
-  } else {
-    debugPrintln("'Entries' key was not found");
-  }
-
-  //Get Arrays by keys
-  dates = getJSONArrayInFile("dates", json);
-  times = getJSONArrayInFile("times", json);
-  levels = getJSONArrayInFile("aleq", json);
-
-  //TODO:Verify entries = #dates = #times = #levels
-  debugPrintln("Entries = "+entries+"\tJSON Array lengths: "+ dates.size()+"\t"+ times.size()+"\t"+ levels.size());
-  if (entries == dates.size() && entries == times.size() && entries == levels.size()) {
-    debugPrintln("JSON data entries count verified");
-  }
-  debugPrintln("JSON data loaded");
-}
-
-JSONArray getJSONArrayInFile(String s_, JSONObject j_) {
-  JSONArray jsonArray = new JSONArray();
-  if (!j_.isNull(s_)) {
-    jsonArray = j_.getJSONArray(s_);
-  } else {
-    debugPrintln("Key "+s_+" not found in file");
-  }
-  return jsonArray;
-}
-
-boolean verifyFilenameTimestamp(String f_) {
-  //filenames contain "site" follow by a site_id (1 or 2 chars, 1 to 14) followed by UNIX timestamp 10 digits for period
-
-  //String [] parsed = {"-1", "-1", "-1"}; 
-  //if ((f_.endsWith(".php")) || (f_.endsWith(".PHP")) ) {
-  //  //what to do?
-  //} else if ((f_.endsWith(".json")) || (f_.endsWith(".JSON")) ) {
-  ////what to do?
-  //}
-
-  String base = FilenameUtils.getBaseName(f_);
-  debugPrint("Filename (no ext): "+base);
-  debugPrintln("\t# characters: "+base.length());
-  String epochString = null;
-
-  //TODO: make this more robust e.g. for all possible site-ids, dates combos
-  if (base.length()==15) {
-    epochString = base.substring(5, 15); //will assume e.g. site#**********
-  } else if (base.length()==16) {
-    epochString = base.substring(6, 16); //will assume e.g. site##**********
-  }
-  debugPrint("Unix epoch: "+epochString);
-  //Unix epoch time stamp range: 
-  //999999999 (9 digits) = Sunday, September 9, 2001 1:46:39 AM
-  //9999999999 (10 digits) = Saturday, November 20, 2286 5:46:39 PM
-  //2000000000 (10) = Wednesday, May 18, 2033 3:33:20 AM
-  long epochLong = Long.parseLong(epochString);
-  Date date = new Date(epochLong * 1000L);
-  SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
-  String dateString = format.format(date);
-  debugPrintln("\tHuman readable: "+dateString);
-
-  String startDateString = dates.getString(0);
-  String endDateString = dates.getString(dates.size()-1);
-  debugPrintln("Start date string in JSON data: "+startDateString);
-  debugPrintln("End date string in JSON data: "+endDateString);
-  Date startDate, endDate;
-  String newDateString;
-  try {
-    startDate = format.parse(startDateString);
-    endDate = format.parse(endDateString);
-    newDateString = format.format(startDate);
-    endDateString = format.format(endDate);
-    debugPrintln("\t Start/end dates in JSON data: "+newDateString+" | "+endDateString);
-    if (newDateString.equals(endDateString)&&newDateString.equals(dateString)) {
-      return true;
-    } else {
-      return false;
-    }
-  } 
-  catch (ParseException e) {
-    //e.debugPrintStackTrace();
-    debugPrintln("Error parsing date string from JSON data, and JSON data spans one day");
-  }
-  return false;
-}
-
-
-/* Java 8 directory lookup code */
-//
-//long count = -1; //# files in dir
-//try {
-//  debugPrintln("Files: "+ Files.list(Paths.get(sp_)));
-//  count = Files.list(Paths.get(sp_)).count();
-//  debugPrintln("# files in directory is "+ count);
-//}
-//catch(IOException e) {
-//  debugPrintln("IOE counting files");
-//}
-
+//***TODO: write to log file on error
 void debugPrint(String s_) {
   if (debugPrintDebug) {
     print(s_);
