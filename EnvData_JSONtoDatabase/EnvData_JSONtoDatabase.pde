@@ -26,6 +26,7 @@
 
 
 import java.nio.file.Files;
+import java.io.FilenameFilter;
 import java.nio.file.Paths;
 import java.nio.file.Path;
 import java.io.File;
@@ -46,10 +47,12 @@ boolean debugPrintDebug = true; //toggle debug print messages to console
 //JSON files
 String emptyPath = "//data//empty//";
 String addPath = "//data//ambientSound14//";
-String fullPath = "C://Users//Liam//Google Drive//NCG//Tasks//System Architecture//Code//DashboardPartialCopy//public_html//ambientSound1";
+String fullPath = "E://NCG//DashboardPartialCopy//public_html//ambientSound1";
 String searchPath; 
 JSONObject json;
 JSONArray dates, times, levels; //Keys for Environmental Sound Monitoring 
+int entries;
+long timestampLong = -1; //timestampLong encoded in file name string
 
 //Database access
 String user     = "root";
@@ -58,54 +61,68 @@ String pass     = "qlDh6KXnANo938ju";
 String database = "soundmonitoringdb";
 
 void setup() {
-  searchPath = sketchPath()+addPath;
-  //searchPath = emptyPath;
-  File[] directoryFiles = loadFileList(searchPath); //***TODO: only load .php or .json
-  if (directoryFiles.length > 1) { //***TODO: hardcoded must be replaced
-    debugPrintln("Start file parsing... could be a while!");
-    for (int i=0; i<directoryFiles.length; i+=1) {
-      debugPrintln(".....................................");
-      loadJSONData(directoryFiles[i]); //loads arrays with data from JSON fields in file e.g. dates, times, levels
-
-      //for each file in dir, get a String for the date contained in filename
-      Path p = Paths.get(directoryFiles[i].toString());
-      String filename = p.getFileName().toString();
-      debugPrint("filename: "+filename);
-
-      int fid = getFilenameSiteId(filename);
-      debugPrintln("\tsite ID is: "+fid);
-
-      long epoch = getFilenameTimestamp(filename); //get the long int for the timestamp
-      SimpleDateFormat f = new SimpleDateFormat("dd/MM/yyyy");
-      String dateString = getDateStringFromTimestamp(epoch, f); //format as date string
-      debugPrintln("\tgetDateStringFromTimestamp: "+dateString);
-      
-      //check filename timestamp string against dates in JSON
-      if (verifyJSONDates(dates, dateString)) {
-        debugPrintln("Filename timestamp matches dates in JSON data");
-      } else {
-        debugPrintln("Filename timestamp does not match dates in JSON data, exiting");
-        debugPrintln("******Exit at file: "+filename+"******");
-        exit();
-      }
-    }
-    debugPrintln(".....................................");
-    debugPrintln("Finished file parsing.");
-  } else {
-    debugPrintln(".....................................");
-    debugPrintln("No files to parse in directory");
-  }
-
   // connect to database of server "localhost"
   db = new MySQL( this, "localhost", database, user, pass );
   if ( db.connect() )
   {
     println( "Successful Connection to DB!" );
     printDBInfo(db);
-    long start = millis();
-    insertFilesIntoTable(db, "sound_monitoring_readings", true); // database, table, toggle append
-    long delta = millis()-start;
-    println("Elapsed time for database update "+delta);
+
+    //searchPath = sketchPath()+addPath;
+    //searchPath = emptyPath;
+    searchPath = fullPath;
+    File[] directoryFiles = loadFileList(searchPath); //***TODO: only load .php or .json
+    if (directoryFiles.length > 1) { //***TODO: hardcoded must be replaced
+      debugPrintln("***Start file parsing... this could take a while!");
+      long start = millis();
+      for (int i=0; i<directoryFiles.length; i+=1) {
+        debugPrintln(".....................................");
+        loadJSONData(directoryFiles[i]); //loads arrays with data from JSON fields in file e.g. dates, times, levels
+
+        //for each file in dir, get a String for the date contained in filename
+        Path p = Paths.get(directoryFiles[i].toString());
+        String filename = p.getFileName().toString();
+        debugPrint("filename: "+filename);
+
+        int fid = getFilenameSiteId(filename);
+        debugPrintln("\tsite ID is: "+fid);
+
+        timestampLong = getFilenameTimestamp(filename); //get the long int for the timestampLong
+        SimpleDateFormat fd = new SimpleDateFormat("dd/MM/yyyy");
+        String dateString = getDateStringFromTimestamp(timestampLong, fd); //format as date string
+        SimpleDateFormat ft = new SimpleDateFormat("HH:mm");
+        String timeString = getDateStringFromTimestamp(timestampLong, ft); //format as time string
+        debugPrintln("Date String: "+dateString+"\tTime String: "+timeString);
+
+        //check filename timestampLong string against dates in JSON
+        if (verifyJSONDates(dates, dateString)) {
+          debugPrintln("Filename timestampLong matches dates in JSON data");
+
+          if (entries==288) {
+            //insertFilesIntoTable(db, "sound_monitoring_readings", true); // database, table, toggle append
+            debugPrint("----> Found file at end of day <----"); 
+            debugPrint("----> "+filename+" <----");
+          }
+        } else {
+          debugPrintln("Filename timestampLong does not match dates in JSON data, SKIPPING");
+          debugPrintln("******Skip file: "+filename+" ******");
+        }
+
+        //
+
+
+        long delta = millis()-start;
+        debugPrintln("Elapsed time for database update "+delta);
+      }//////////////////////////////////////////////////////////////////////////////////End for-loop
+      debugPrintln(".....................................");
+      debugPrintln("***Finished file parsing.");
+    } else {
+      debugPrintln(".....................................");
+      debugPrintln("***No files to parse in directory");
+    }
+
+
+
 
     ////Alternatives... getting quirky results
     ////insert rows
@@ -119,7 +136,7 @@ void setup() {
     ////}
   } else
   {
-    println( "Connection to DB failed" );
+    debugPrintln( "Connection to DB failed" );
   }
   db.close();
   exit();

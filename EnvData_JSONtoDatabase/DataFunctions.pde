@@ -3,7 +3,16 @@
 File[] loadFileList(String sp_) {
   debugPrintln("Looking in "+sp_);
   File dir = new File(sp_);
-  File[] dirList = dir.listFiles();
+  //File[] dirList = dir.listFiles(".php");
+
+  File [] dirList = dir.listFiles(new FilenameFilter() {
+    @Override
+      public boolean accept(File dir, String name) {
+      return name.toLowerCase().endsWith(".php");
+    }
+  }
+  );
+
   if (dirList != null) {
     debugPrintln("dirList length is: "+ dirList.length);
     return dirList;
@@ -26,7 +35,7 @@ void loadJSONData(File f_) {
   //Environmental Sound Data
   //************************
   //Get 'entries' key
-  int entries = -1;
+  entries = -1;
   if (!json.isNull("entries")) {
     entries = json.getInt("entries");
     debugPrintln("Entries: "+entries);
@@ -95,13 +104,19 @@ long getFilenameTimestamp(String f_) {
   } else if (base.length()==16) {
     epochString = base.substring(6, 16); //will assume e.g. site##**********
   }
-  debugPrint("Unix epoch: "+epochString);
+  debugPrint("Unix epoch: "+epochString+"\t");
   //Unix epoch time stamp range: 
   //999999999 (9 digits) = Sunday, September 9, 2001 1:46:39 AM
   //9999999999 (10 digits) = Saturday, November 20, 2286 5:46:39 PM
   //2000000000 (10) = Wednesday, May 18, 2033 3:33:20 AM
   long epochLong = Long.parseLong(epochString);
   return epochLong;
+}
+
+String getDateStringFromTimestamp(long ts_, SimpleDateFormat f_) {
+  Date d = new Date(ts_ * 1000L);
+  String dateStr = f_.format(d);
+  return dateStr;
 }
 
 boolean verifyJSONDates(JSONArray dates_, String ds_) {
@@ -140,12 +155,6 @@ float getReadingForTimestamp(long ts_) {
   //use day/hour/minute only, as seconds don't match
 
   return -1;
-}
-
-String getDateStringFromTimestamp(long ts_, SimpleDateFormat f_) {
-  Date d = new Date(ts_ * 1000L);
-  String dateStr = f_.format(d);
-  return dateStr;
 }
 
 //LocalTime getTimeFromTimeStamp(){
