@@ -1,3 +1,19 @@
+//loadFileList method
+//load all .php files from a directory string
+File[] loadFileList(String sp_) {
+  debugPrintln("Looking in "+sp_);
+  File dir = new File(sp_);
+  File[] dirList = dir.listFiles();
+  if (dirList != null) {
+    debugPrintln("dirList length is: "+ dirList.length);
+    return dirList;
+  } else {
+    dirList = new File[1];
+    //dirList[0] = new File("Directory_File_List_Null"); //***TODO: Test this.
+    return dirList;
+  }
+}
+
 void loadJSONData(File f_) {
   // Load JSON file
   //***TODO: check for empty file, Null values.
@@ -41,6 +57,21 @@ JSONArray getJSONArrayInFile(String s_, JSONObject j_) {
   return jsonArray;
 }
 
+//extract site id from file name string
+int getFilenameSiteId(String f_) {
+  String base = FilenameUtils.getBaseName(f_);
+  String idString = "-1";
+  if (base.length()==15) {
+    idString = base.substring(4, 5); //will assume e.g. site#**********
+  } else if (base.length()==16) {
+    idString = base.substring(4, 6); //will assume e.g. site##**********
+  }
+  //println("substring: "+idString);
+  int idInt = int(idString);
+  return idInt;
+}
+
+//extract timestamp from filename string
 long getFilenameTimestamp(String f_) {
   //filenames contain "site" follow by a site_id (1 or 2 chars, 1 to 14) followed by UNIX timestamp 
   //10 digits for period  
@@ -74,7 +105,7 @@ long getFilenameTimestamp(String f_) {
 }
 
 boolean verifyJSONDates(JSONArray dates_, String ds_) {
- String startDateString = dates_.getString(0);
+  String startDateString = dates_.getString(0);
   String endDateString = dates_.getString(dates_.size()-1);
   debugPrintln("Start date string in JSON data: "+startDateString);
   debugPrintln("End date string in JSON data: "+endDateString);
@@ -100,25 +131,6 @@ boolean verifyJSONDates(JSONArray dates_, String ds_) {
   return false;
 }
 
-//loadFileList method
-//load all .php files from a directory
-//extract site id from file name
-//extract timestamp from filename
-File[] loadFileList(String sp_) {
-  debugPrintln("Looking in "+searchPath);
-  File dir = new File(sp_);
-  File[] dirList = dir.listFiles();
-  if (dirList != null) {
-    debugPrintln("dirList length is: "+ dirList.length);
-
-    return dirList;
-  } else {
-    dirList = new File[1];
-    //dirList[0] = new File("Directory_File_List_Null"); //***TODO: Test this.
-    return dirList;
-  }
-}
-
 
 
 //use timestamp in filename to look through JSON data and find associated reading
@@ -133,7 +145,6 @@ float getReadingForTimestamp(long ts_) {
 String getDateStringFromTimestamp(long ts_, SimpleDateFormat f_) {
   Date d = new Date(ts_ * 1000L);
   String dateStr = f_.format(d);
-  debugPrintln("\tgetDateStringFromTimestamp: "+dateStr);
   return dateStr;
 }
 

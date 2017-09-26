@@ -31,10 +31,8 @@ void printDBInfo(MySQL db_) {
     //}
   }
 }
-
 void insertFilesIntoTable(MySQL db_, String tn_, boolean append_) {
   //TODO: check for existing entry for timestamp, verify match for reading and skip if appropriate
-
 
   //query rows
   db_.query( "SELECT COUNT(*) FROM %s", tn_ );
@@ -45,6 +43,7 @@ void insertFilesIntoTable(MySQL db_, String tn_, boolean append_) {
   if (append_) {
     offset = nRows;
   }
+  db.query( "SELECT * FROM %s", tn_);
   for (int i=0; i<10; i+=1) {
     //SomeObject newData = new SomeObject(int(random(100)));
     SoundReading newData = new SoundReading(i);

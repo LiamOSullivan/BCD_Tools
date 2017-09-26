@@ -70,11 +70,16 @@ void setup() {
       //for each file in dir, get a String for the date contained in filename
       Path p = Paths.get(directoryFiles[i].toString());
       String filename = p.getFileName().toString();
-      debugPrintln("filename: "+filename);
+      debugPrint("filename: "+filename);
+
+      int fid = getFilenameSiteId(filename);
+      debugPrintln("\tsite ID is: "+fid);
+
       long epoch = getFilenameTimestamp(filename); //get the long int for the timestamp
       SimpleDateFormat f = new SimpleDateFormat("dd/MM/yyyy");
       String dateString = getDateStringFromTimestamp(epoch, f); //format as date string
-
+      debugPrintln("\tgetDateStringFromTimestamp: "+dateString);
+      
       //check filename timestamp string against dates in JSON
       if (verifyJSONDates(dates, dateString)) {
         debugPrintln("Filename timestamp matches dates in JSON data");
@@ -92,31 +97,31 @@ void setup() {
   }
 
   // connect to database of server "localhost"
-  //db = new MySQL( this, "localhost", database, user, pass );
-  //if ( db.connect() )
-  //{
-  //  println( "Successful Connection to DB!" );
-  //  printDBInfo(db);
-  //  long start = millis();
-  //  insertFilesIntoTable(db, "sound_monitoring_readings", true);
-  //  long delta = millis()-start;
-  //  println("Elapsed time for database update "+delta);
+  db = new MySQL( this, "localhost", database, user, pass );
+  if ( db.connect() )
+  {
+    println( "Successful Connection to DB!" );
+    printDBInfo(db);
+    long start = millis();
+    insertFilesIntoTable(db, "sound_monitoring_readings", true); // database, table, toggle append
+    long delta = millis()-start;
+    println("Elapsed time for database update "+delta);
 
-  //  ////Alternatives... getting quirky results
-  //  ////insert rows
-  //  ////db.insertUpdateInDatabase(java.lang.String tableName, java.lang.String[] columnNames, java.lang.Object[] values) 
-  //  ////  Insert or update a bunch of values in the database.
-  //  ////while (db.next())
-  //  ////{
-  //  ////  mySQLTable t = new mySQLTable();
-  //  ////  db.setFromRow( t ); //tries to map column names to public fields or setter methods in the given object.
-  //  ////  println( t );
-  //  ////}
-  //} else
-  //{
-  //  println( "Connection to DB failed" );
-  //}
-  //db.close();
+    ////Alternatives... getting quirky results
+    ////insert rows
+    ////db.insertUpdateInDatabase(java.lang.String tableName, java.lang.String[] columnNames, java.lang.Object[] values) 
+    ////  Insert or update a bunch of values in the database.
+    ////while (db.next())
+    ////{
+    ////  mySQLTable t = new mySQLTable();
+    ////  db.setFromRow( t ); //tries to map column names to public fields or setter methods in the given object.
+    ////  println( t );
+    ////}
+  } else
+  {
+    println( "Connection to DB failed" );
+  }
+  db.close();
   exit();
 }
 
