@@ -8,7 +8,7 @@ File[] loadFileList(String sp_) {
   File [] dirList = dir.listFiles(new FilenameFilter() {
     @Override
       public boolean accept(File dir, String name) {
-      return name.toLowerCase().endsWith(".php");
+      return name.endsWith(".php");
     }
   }
   );
@@ -23,12 +23,20 @@ File[] loadFileList(String sp_) {
   }
 }
 
-void loadJSONData(File f_) {
+boolean loadJSONData(File f_) {
   // Load JSON file
   //***TODO: check for empty file, Null values.
   //***TODO: validate timestamp against dates, times
-  debugPrintln("Loading JSON from: "+f_);
-  json = loadJSONObject(f_);
+  //debugPrintln("Loading JSON from: "+f_);
+
+  double bytes = f_.length();
+  if (bytes>0) {
+    //double kilobytes = (bytes / 1024);
+    json = loadJSONObject(f_);
+  } else {
+    //debugPrintln("Invalid JSON, skipping");
+    return false;
+  }
   //debugPrintln(json); 
 
   //************************
@@ -38,9 +46,9 @@ void loadJSONData(File f_) {
   entries = -1;
   if (!json.isNull("entries")) {
     entries = json.getInt("entries");
-    debugPrintln("Entries: "+entries);
+    //debugPrintln("Entries: "+entries);
   } else {
-    debugPrintln("'Entries' key was not found");
+    //debugPrintln("'Entries' key was not found");
   }
 
   //Get Arrays by keys
@@ -49,11 +57,12 @@ void loadJSONData(File f_) {
   levels = getJSONArrayInFile("aleq", json);
 
   //TODO:Verify entries = #dates = #times = #levels
-  debugPrintln("Entries = "+entries+"\tJSON Array lengths: "+ dates.size()+"\t"+ times.size()+"\t"+ levels.size());
+  //debugPrintln("Entries = "+entries+"\tJSON Array lengths: "+ dates.size()+"\t"+ times.size()+"\t"+ levels.size());
   if (entries == dates.size() && entries == times.size() && entries == levels.size()) {
-    debugPrintln("JSON data entries count verified");
+    //debugPrintln("JSON data entries count verified");
   }
-  debugPrintln("JSON data loaded");
+  //debugPrintln("JSON data loaded");
+  return true;
 }
 
 JSONArray getJSONArrayInFile(String s_, JSONObject j_) {
@@ -94,8 +103,8 @@ long getFilenameTimestamp(String f_) {
   //}
 
   String base = FilenameUtils.getBaseName(f_);
-  debugPrint("Filename (no ext): "+base);
-  debugPrintln("\t# characters: "+base.length());
+  //debugPrint("Filename (no ext): "+base);
+  //debugPrintln("\t# characters: "+base.length());
   String epochString = null;
 
   //TODO: make this more robust e.g. for all possible site-ids, dates combos
@@ -104,7 +113,7 @@ long getFilenameTimestamp(String f_) {
   } else if (base.length()==16) {
     epochString = base.substring(6, 16); //will assume e.g. site##**********
   }
-  debugPrint("Unix epoch: "+epochString+"\t");
+  //debugPrint("Unix epoch: "+epochString+"\t");
   //Unix epoch time stamp range: 
   //999999999 (9 digits) = Sunday, September 9, 2001 1:46:39 AM
   //9999999999 (10 digits) = Saturday, November 20, 2286 5:46:39 PM
@@ -119,33 +128,64 @@ String getDateStringFromTimestamp(long ts_, SimpleDateFormat f_) {
   return dateStr;
 }
 
+//Check that the readings occur on same date,
+//(by comparing first and last dates in JSON)
+//and that this matches the date in the timestamp
+//used as the filename
+//Must also check if the file was written to in the
+//day after- this happens close to midnight
+
 boolean verifyJSONDates(JSONArray dates_, String ds_) {
-  String startDateString = dates_.getString(0);
-  String endDateString = dates_.getString(dates_.size()-1);
-  debugPrintln("Start date string in JSON data: "+startDateString);
-  debugPrintln("End date string in JSON data: "+endDateString);
-  Date startDate, endDate;
-  String newDateString;
-  SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-  try {
-    startDate = sdf.parse(startDateString);
-    endDate = sdf.parse(endDateString);
-    newDateString = sdf.format(startDate);
-    endDateString = sdf.format(endDate);
-    debugPrintln("\t Start/end dates in JSON data: "+newDateString+" | "+endDateString);
-    if (newDateString.equals(endDateString)&&newDateString.equals(ds_)) {
+  if (dates_.size()>0) {
+    String startDateString = dates_.getString(0);
+    String endDateString = dates_.getString(dates_.size()-1);
+    if (startDateString.equals(endDateString) && startDateString.equals(ds_)) {
+      //debugPrintln("The date strings all DO match!");
       return true;
     } else {
-      return false;
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+      LocalDate ds_Minus1 = LocalDate.parse(ds_, formatter);
+      ds_Minus1=ds_Minus1.minusDays(1);
+      String ds_MinusString= ds_Minus1.format(formatter);
+      if (startDateString.equals(endDateString)&& startDateString.equals(ds_MinusString)) {
+        //debugPrintln("The JSON date strings match and the timestamp is the following day!");
+        return true;
+      } else {
+        //debugPrintln("Start date string in JSON data: "+startDateString);
+        //debugPrintln("End date string in JSON data: "+endDateString);
+        //debugPrintln("Timestamp date string in filename: "+ds_);
+        //debugPrintln("The date strings DON'T all match!");
+        return false;
+      }
     }
-  } 
-  catch (ParseException e) {
-    //e.debugPrintStackTrace();
-    debugPrintln("Error parsing date string from JSON data, and JSON data spans one day");
   }
   return false;
 }
 
+
+//LocalDate startDate, endDate;
+//LocalDate endDateMinusOne;
+//String parsedStartDateString, parsedEndDateString, parsedEndDateM1String;
+//DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+//try {
+//  startDate = LocalDate.parse(startDateString, formatter);
+//  endDate = LocalDate.parse(endDateString, formatter);
+//  endDateMinusOne = endDate.minusDays(1);
+//  parsedStartDateString = startDate.format(formatter);
+//  parsedEndDateString = endDate.format(formatter);
+//  parsedEndDateM1String = endDateMinusOne.format(formatter);
+//  debugPrintln("\t Start/end dates in JSON data: "+parsedStartDateString+" | "+parsedEndDateString);
+//  if ((parsedStartDateString.equals(endDateString)&&parsedStartDateString.equals(ds_))
+//  || (parsedStartDateString.equals(parsedEndDateM1String)&&parsedStartDateString.equals(ds_))) {
+//    return true;
+//  } else {
+//    return false;
+//  }
+//} 
+//catch (DateTimeException e) {
+//  //e.debugPrintStackTrace();
+//  debugPrintln("Error parsing date string from JSON data, and JSON data spans one day");
+//}
 
 
 //use timestamp in filename to look through JSON data and find associated reading
