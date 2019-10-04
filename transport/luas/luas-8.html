@@ -1,0 +1,383 @@
+
+
+<!DOCTYPE html>
+
+<html>
+<head><title>
+	
+</title><link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous" />
+
+    <style type="text/css">
+        .inputDiv {
+            /*border: thin solid #0000FF;*/
+            margin-top: 15px;
+        }
+        
+        .monitoring 
+        {
+        	margin-bottom:35px;
+        }
+        .monitoring .status 
+        {
+            color:#fff;
+            padding: 5px 2px;
+        	text-align:center;
+        	font-weight:bold;
+            border: solid 1px #fff;
+        }
+        .monitoring .good-status
+        {
+            background-color:#006400;
+        }
+        .monitoring .warning-status
+        {
+            background-color:#FFC200;
+        }
+        .monitoring .bad-status
+        {
+        	background-color:#b22222;
+        }
+    </style>
+</head>
+<body>
+    <form method="post" action="./view.aspx?id=08" id="form1">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="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" />
+
+<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="351A3326" />
+<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEdAE24sRk40qD4xDESilfciZjM610imdfwM1koRvy/UV/vKsX63GZ+7OKoRFAAgVhbpEpx9InuGEWJbs3bUKiemzaDp8aJzNBQ9jTzxn0oQu6BPOalRRTMMzAKbJehq0/I/KiMImZKj9zMH7KrhTncb9e15Yj+KIyqY5pCfHDCLb8G6F8P3u+080qKx3HQOqu7UzRfJ7Oe776gwRhxm/v5I8TZIiWXFGoFRa7qPm21QYuNqroZg/eHpinVvfq/AVbXWkXRRzMooC0MZxPMV4U3ooKvUL9VQuAOY8T6J/VmBNC1xC6jvaPfcypg+V/CIwxmOctoRACvUYKhWUL6XBzC7pQEJuEM8Cey12MYpP0pUwziNCf8yBWded8hYOkXHHNqyKQK2OXaSNSJQY+gobm1ittcpMPYzjKmpQXgKKmirHURevaVBhAHVm2ouSWmHFlzgPJTtvgfVaFm/v/pw1FS43ZKWY5andrYz/WmILhawK5s9bculTkxl/kqULhV6F2mDCv3MT/E06zHXJNtuYTkVkcZ3z3rkFq6eK9RqN+WYuQUAFAYK20vbjq1vJ20W2cf3qvC1Zm7eWEvuhW9AHoFKq2ylk08f2E8+Bv9R6LffKSj58GjRPsDzPnWPs5roHrSeXYB7VxwrNfdr+cL8JdLawrwX5bRQDfjlDP2t5FFH2wWSmxz084GXslGy6pqBhMlcBZ2enTJH29P4eSRbHA3E5CICAr59lNp9/uUYLJij/mxpwhAEpQWyr2I4qvK4AbnDpmJzo+ZXb7JzyhSfN1F77Z6989yYqT8R8pc4PPInJJXUW1FH8OOPTw+wzflQ3D2aPBdbglFTJAC4TILuaDlbJtZ42+ngq23LHpD3X3eSo/mJQZ8xsg8/D+M07JwCPnQUoUpFihOPib5VQgbq5vC8p9YwH/OiPnxk+T2hR3zMv0gQhZ0zTM9f6YGP8HKmKmoWGEHKw9uTNjSs3tYqCndSUmYeFdeOz8LLuStKqKa/DwlJuROXqeYq7eReRnrl11/pBtN4Oj6mMb72bZA8YS3ncmAJXN4+/1icEw04vsAt8s//bN9mVTkV2AihZGpPNdCM96EpbTQndV2dMTZNeLRQCtrDKi/njKcYunTwHa2KPzQ5NDxsqH6A9igh9Ygu5pnejmyTdOjbTErPBPBhGi4DQN4zUisXuEF+lkblveHP99EoE9omMhga/V6JW9c4RbNXAjDCWcsVlsj5bwaJtfY4dAcy7B+VzU12VQ2uirxoNtBawLDrP+hRdyFPYEwKfeYgT69HusrzFmIfKo6XIqVNP9VQE+SRpEaFQyOYlVW6gH+tgqH5SZmWx2G+jcBegzVogfLkuOwS+ixVCQY+MTwrSlEJodoPXsWfay4gQxcU+s2ajhqI0JdbjTrMnY5Y8021ig7UbyqAqbipJkxQjd7HaX26ankrMiJgyFbeGmkKb1ttqd7gEuUzAne6RvjxdE4OJjql1jH2SX8PpR4VsCBU+t26zfYV42NQn3f5WScoFwWfaXbw+L8p0Oyisne+E3X3NdOg5iFwkO8DieK/RIOcgARCY++In/xsJ9SMxhXthf2vbqKYKDK5iudyBRpIdRPERKMzza9XCxH5KetlGmvKY5z6Sj6AOn0iHEFsxxInny/GY4laPCxnjGe8KG3pVaP61qYLeKA97ZmJpJmzuXYCgQ+" />
+        <nav class="navbar navbar-default navbar-static-top">
+            <div class="container">
+                <ul class="nav navbar-nav">
+                    <li><a href="/Analysis/View.aspx">Luas Forecasts</a></li>
+                    <li><a href="/Analysis/siri">SIRI</a></li>
+                    <li><a href="/travelupdates/">Travel Updates</a></li>
+                    <li><a href="/Admin/Signout.aspx">Signout/login</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <div>
+                
+    <select name="ctl00$cplBody$ddlStop" id="cplBody_ddlStop">
+	<option value="72">72 - STX - St. Stephen&#39;s Green</option>
+	<option value="73">73 - HIN - Heuston</option>
+	<option value="74">74 - HCT - Heuston</option>
+	<option value="57">57 - TPT - The Point</option>
+	<option value="56">56 - SDK - Spencer Dock</option>
+	<option value="55">55 - MYS - Mayor Square - NCI</option>
+	<option value="54">54 - GDK - George&#39;s Dock</option>
+	<option value="23">23 - CON - Connolly</option>
+	<option value="22">22 - BUS - Bus&#225;ras</option>
+	<option value="21">21 - ABB - Abbey Street</option>
+	<option value="20">20 - JER - Jervis</option>
+	<option value="19">19 - FOU - Four Courts</option>
+	<option value="18">18 - SMI - Smithfield</option>
+	<option value="17">17 - MUS - Museum</option>
+	<option value="16">16 - HEU - Heuston</option>
+	<option value="15">15 - JAM - James&#39;s</option>
+	<option value="14">14 - FAT - Fatima</option>
+	<option value="13">13 - RIA - Rialto</option>
+	<option value="12">12 - SUI - Suir Road</option>
+	<option value="11">11 - GOL - Goldenbridge</option>
+	<option value="10">10 - DRI - Drimnagh</option>
+	<option value="9">9 - BLA - Blackhorse</option>
+	<option selected="selected" value="8">8 - BLU - Bluebell</option>
+	<option value="7">7 - KYL - Kylemore</option>
+	<option value="6">6 - RED - Red Cow</option>
+	<option value="5">5 - KIN - Kingswood</option>
+	<option value="4">4 - BEL - Belgard</option>
+	<option value="3">3 - COO - Cookstown</option>
+	<option value="2">2 - HOS - Hospital</option>
+	<option value="1">1 - TAL - Tallaght</option>
+	<option value="49">49 - FET - Fettercairn</option>
+	<option value="50">50 - CVN - Cheeverstown</option>
+	<option value="51">51 - CIT - Citywest Campus</option>
+	<option value="52">52 - FOR - Fortunestown</option>
+	<option value="53">53 - SAG - Saggart</option>
+	<option value="58">58 - DEP - Depot</option>
+	<option value="71">71 - BRO - Broombridge</option>
+	<option value="70">70 - CAB - Cabra</option>
+	<option value="69">69 - PHI - Phibsborough</option>
+	<option value="68">68 - GRA - Grangegorman</option>
+	<option value="67">67 - BRD - Broadstone - DIT</option>
+	<option value="66">66 - DOM - Dominick</option>
+	<option value="65">65 - PAR - Parnell</option>
+	<option value="64">64 - OUP - O&#39;Connell - Upper</option>
+	<option value="63">63 - OGP - O&#39;Connell - GPO</option>
+	<option value="62">62 - MAR - Marlborough</option>
+	<option value="61">61 - WES - Westmoreland</option>
+	<option value="60">60 - TRY - Trinity</option>
+	<option value="59">59 - DAW - Dawson</option>
+	<option value="24">24 - STS - St. Stephen&#39;s Green</option>
+	<option value="25">25 - HAR - Harcourt</option>
+	<option value="26">26 - CHA - Charlemont</option>
+	<option value="27">27 - RAN - Ranelagh</option>
+	<option value="28">28 - BEE - Beechwood</option>
+	<option value="29">29 - COW - Cowper</option>
+	<option value="30">30 - MIL - Milltown</option>
+	<option value="31">31 - WIN - Windy Arbour</option>
+	<option value="32">32 - DUN - Dundrum</option>
+	<option value="33">33 - BAL - Balally</option>
+	<option value="34">34 - KIL - Kilmacud</option>
+	<option value="35">35 - STI - Stillorgan</option>
+	<option value="36">36 - SAN - Sandyford</option>
+	<option value="37">37 - CPK - Central Park</option>
+	<option value="38">38 - GLE - Glencairn</option>
+	<option value="39">39 - GAL - The Gallops</option>
+	<option value="40">40 - LEO - Leopardstown Valley</option>
+	<option value="42">42 - BAW - Ballyogan Wood</option>
+	<option value="43">43 - RCC - Racecourse</option>
+	<option value="44">44 - CCK - Carrickmines</option>
+	<option value="45">45 - BRE - Brennanstown</option>
+	<option value="46">46 - LAU - Laughanstown</option>
+	<option value="47">47 - CHE - Cherrywood</option>
+	<option value="48">48 - BRI - Bride&#39;s Glen</option>
+
+</select>
+
+    <input type="submit" name="ctl00$cplBody$btnRefresh" value="Refresh" id="cplBody_btnRefresh" />
+    
+    <span id="cplBody_lblMessage">Stop ID: 8.  Page created at 15:48:01</span>
+    
+    <div class="monitoring row">
+        <div id="cplBody_pnlLastKeepAliveReceived" class="col-md-4 status left good-status">
+	
+            LastKeepaliveReceivedLocalValue_within_threshold=true (04/10/2019 16:48:01)
+        
+</div>
+        <div id="cplBody_pnlLastForecasterRun" class="col-md-4 status right good-status">
+	
+            LastForecasterRun_within_threshold=true (0)
+        
+</div>
+        <div id="cplBody_pnlLastForecastReceived" class="col-md-4 status left good-status">
+	
+            LastForecastReceivedLocalValue_within_threshold=true (04/10/2019 16:48:01)
+        
+</div>
+    </div>
+
+    <div style="clear:both">
+        
+                <table class="table table-hover">
+                    <tr>
+                        <th>Direction</th>
+                        <th>Destination</th>
+                        <th>Time</th>
+                        <th>AVLS<br/>Time</th>
+                        <th>Tram</th>
+                        <th>Action</th>
+                        <th>Msg Sent<br />(AVLS time)</th>
+                        <th>Msg Received<br />(LF Server time)</th>
+                        <th>Msg Processed<br />(LF Server time)</th>
+                        <th>XML ID<br />(from AVLS)</th>
+                        <th>Total Lag</th>
+                        <th>Create Lag</th>
+                        <th>Process Lag</th>
+                    </tr>
+            
+                <tr>
+                    <td>Inbound</td>                    
+                    <td>Connolly</td>                    
+                    <td>00:03:21</td>   
+                    <td>00:04:01</td>   
+                    <td>3001</td>
+                    <td>a</td>
+                    <td>04/10/2019 16:47:59</td>
+                    <td>04/10/2019 16:47:59</td>
+                    <td>04/10/2019 16:47:59</td>
+                    <td>24914</td>
+                    <td>0.4483007</td>
+                    <td>0.4326934</td>
+                    <td>0.0156073</td>
+                </tr>
+            
+                <tr>
+                    <td>Inbound</td>                    
+                    <td>The Point</td>                    
+                    <td>00:04:57</td>   
+                    <td>00:05:37</td>   
+                    <td>4004</td>
+                    <td>a</td>
+                    <td>04/10/2019 16:47:59</td>
+                    <td>04/10/2019 16:48:00</td>
+                    <td>04/10/2019 16:48:00</td>
+                    <td>24915</td>
+                    <td>1.4491675</td>
+                    <td>1.0897824</td>
+                    <td>0.3593851</td>
+                </tr>
+            
+                <tr>
+                    <td>Inbound</td>                    
+                    <td>The Point</td>                    
+                    <td>00:12:12</td>   
+                    <td>00:12:52</td>   
+                    <td>4003</td>
+                    <td>a</td>
+                    <td>04/10/2019 16:47:59</td>
+                    <td>04/10/2019 16:48:00</td>
+                    <td>04/10/2019 16:48:00</td>
+                    <td>24915</td>
+                    <td>1.4335396</td>
+                    <td>1.0897824</td>
+                    <td>0.3437572</td>
+                </tr>
+            
+                <tr>
+                    <td>Inbound</td>                    
+                    <td>Connolly</td>                    
+                    <td>00:14:59</td>   
+                    <td>00:15:39</td>   
+                    <td>3010</td>
+                    <td>a</td>
+                    <td>04/10/2019 16:47:59</td>
+                    <td>04/10/2019 16:47:59</td>
+                    <td>04/10/2019 16:47:59</td>
+                    <td>24914</td>
+                    <td>0.7142218</td>
+                    <td>0.4326934</td>
+                    <td>0.2815284</td>
+                </tr>
+            
+                <tr>
+                    <td>Outbound</td>                    
+                    <td>Tallaght</td>                    
+                    <td>00:02:19</td>   
+                    <td>00:02:59</td>   
+                    <td>3006</td>
+                    <td>a</td>
+                    <td>04/10/2019 16:47:59</td>
+                    <td>04/10/2019 16:47:59</td>
+                    <td>04/10/2019 16:47:59</td>
+                    <td>24914</td>
+                    <td>0.5108322</td>
+                    <td>0.4326934</td>
+                    <td>0.0781388</td>
+                </tr>
+            
+                <tr>
+                    <td>Outbound</td>                    
+                    <td>Saggart</td>                    
+                    <td>00:05:50</td>   
+                    <td>00:06:30</td>   
+                    <td>3014</td>
+                    <td>a</td>
+                    <td>04/10/2019 16:47:59</td>
+                    <td>04/10/2019 16:48:00</td>
+                    <td>04/10/2019 16:48:00</td>
+                    <td>24915</td>
+                    <td>1.0897824</td>
+                    <td>1.0897824</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td>Outbound</td>                    
+                    <td>Tallaght</td>                    
+                    <td>00:10:23</td>   
+                    <td>00:11:03</td>   
+                    <td>3012</td>
+                    <td>a</td>
+                    <td>04/10/2019 16:47:59</td>
+                    <td>04/10/2019 16:47:59</td>
+                    <td>04/10/2019 16:47:59</td>
+                    <td>24914</td>
+                    <td>0.7931279</td>
+                    <td>0.4326934</td>
+                    <td>0.3604345</td>
+                </tr>
+            
+                <tr>
+                    <td>Outbound</td>                    
+                    <td>Saggart</td>                    
+                    <td>00:14:06</td>   
+                    <td>00:14:46</td>   
+                    <td>3002</td>
+                    <td>a</td>
+                    <td>04/10/2019 16:47:59</td>
+                    <td>04/10/2019 16:47:59</td>
+                    <td>04/10/2019 16:47:59</td>
+                    <td>24914</td>
+                    <td>0.5108322</td>
+                    <td>0.4326934</td>
+                    <td>0.0781388</td>
+                </tr>
+            
+                </table>
+            
+    </div>
+    <h2>Latest Statistics</h2>
+    
+        <div class="row">
+            <div class="col-sm-12">
+                <label>Last Run</label>
+                <span>2019-10-04T16:47:53</span>
+            </div>
+
+            <h4 class="col-sm-12">Message Parser</h4>
+            <div class="col-md-6">
+                <label># Parsed</label>
+                <span>7</span>
+            </div>
+            <div class="col-md-6">
+                <label>Duration in MS</label>
+                <span>7.3014</span>
+            </div>
+            
+            <h4 class="col-sm-12">Forecast Parser</h4>
+            <div class="col-md-6">
+                <label># Parsed</label>
+                <span>523</span>
+            </div>
+            <div class="col-md-6">
+                <label>Duration in MS</label>
+                <span>0</span>
+            </div>
+            <div class="col-md-6">
+                <label>Last Forecast received time</label>
+                <span>2019-10-04 16:47:52</span>
+            </div>
+            
+            <h4 class="col-sm-12">Message Processor</h4>
+            <div class="col-md-6">
+                <label># Parsed</label>
+                <span>523</span>
+            </div>
+            <div class="col-md-6">
+                <label>Duration in MS</label>
+                <span>1888.2208</span>
+            </div>
+            <div class="col-md-6">
+                <label># Awaiting Processing</label>
+                <span>0</span>
+            </div>
+            <div class="col-md-6">
+                <label>Last Processed XML ID</label>
+                <span>24911</span>
+            </div>
+        </div>
+    
+    <h2>Reports</h2>
+    <div class="inputDiv">
+    You can use this textbox to enter the <i>observed</i> PID forecasts, either from AVLS or the PIDs themselves.&nbsp; These will be 
+        recorded along with the messages and forecasts for later analysis.<br />
+&nbsp;<textarea name="ctl00$cplBody$txtObservations" rows="2" cols="20" id="cplBody_txtObservations">
+</textarea>
+    </div>
+    <input type="submit" name="ctl00$cplBody$btnTakeSnapshot" value="Take snapshot of messages" id="cplBody_btnTakeSnapshot" />
+    <span id="cplBody_lblSnapshotMessage"></span>
+    <div><a href="output/" target="OutputWindow">Click here to access the Output Files</a></div>
+    <h2>About</h2>
+    <div class="row">
+        <div class="col-sm-12">
+            <label>Version</label>
+            <span>3.1.238.1</span>
+        </div>
+    </div>
+
+
+        </div>
+    </form>
+</body>
+</html>
